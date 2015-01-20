@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}Algalon - {{ username }} - {{ project.name }}{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+  <div class="alerm-header">
+    <h1>应用程序: {{project.name}}</h1>
+  </div>
+</div>
+<h3>接收报警邮件列表</h3><a href="{{ url_for('.create_to_email', username=username, project_name=project.name) }}"><span class="label label-success">添加</span></a>
+<div class="to_emails">
+  <table class="table table-hover class">
+    <thead>
+      <tr>
+        <th>Email Address</th>
+        <th>添加时间</th>
+        <th> </th>
+
+      </tr>
+    </thead>
+    <tbody>
+      {% for email in project.to_emails.all() %}
+      <tr>
+        <td>
+          {{ email.address }}
+        </td>
+        <td>
+          {{ moment(email.date_added).format('LLL') }}
+        </td>
+        <td>
+          <a href="{{ url_for('.delete_to_email', username=username, project_name=project.name, to_email_id=email.id) }}">
+            <span class="label label-primary">删除</span>
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+</ul>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}Algalon - {{ username }} - {{ project.name }}{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+  <div class="alerm-header">
+    <h1>应用程序: {{project.name}} 的报警信息</h1>
+  </div>
+</div>
+<h3>报警状态</h3>
+<div class="project-email">
+  接收邮箱:
+  {% for x in project.to_emails.all() %}
+  {{ x.address }}, 
+  {% endfor%}
+  <div class="project-email-footer">
+    <a href="{{ url_for('.show_to_emails', username=username, project_name=project.name) }}">
+      <span class="label label-primary">修改</span>
+    </a>
+  </div>
+
+</div>
+<div class="alarms">
+  <table class="table  table-hover">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Message</th>
+        <th>Recipient</th>
+        <th>添加时间</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for alarm in alarms%}
+      <tr>
+        <td>
+          {{ alarm.title}}
+        </td>
+        <td>
+          {{ alarm.text }}
+        </td>
+        <td>
+          {{ alarm.recipients}}
+        </td>
+        <td>
+          {{ moment(alarm.date_added).format('LLL') }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+</ul>
+
+{% if pagination %}
+<div class="pagination">
+  {{ macros.pagination_widget(pagination, '.user_project', username=username, project_name=project.name)}}
+</div>
+{% endif %}
+{% endblock %}

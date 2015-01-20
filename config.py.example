@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+#coding=utf-8
+
+import os
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+
+class Config:
+    SECRET_KEY = ''
+    SSL_DISABLE = False
+    SQLALCHEMY_COMMIT_ON_TEARDOWN = True
+
+    # 这个是服务器所在的地址,不要加上尾斜线
+    ALGALON_SERVER_HOST = 'http://localhost'
+    ALGALON_SERVER_PORT = 6969
+
+    # 这里是邮件服务器配置,改为相应的邮件服务器
+    MAIL_SERVER = ''
+    MAIL_PORT = 25
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = ''
+    MAIL_PASSWORD = ''
+    ALGALON_ADMIN = ''
+    ALGALON_MAIL_SUBJECT_PREFIX = ''
+    ALGALON_MAIL_SENDER = ''
+
+    #这里是OpenID服务器的地址
+    OPENID2_YADIS = ''
+    OPENID2_LOGOUT = ''
+
+    @staticmethod
+    def init_app(app):
+        pass
+
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = 'mysql://user:pass@localhost/algalon_dev?charset=utf8'
+
+
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'mysql://user:pass@localhost/algalon_test?charset=utf8'
+    WTF_CSRF_ENABLED = False
+
+
+class ProductionConfig(Config):
+    # 这里配置mysql服务器地址
+    SQLALCHEMY_DATABASE_URI = 'mysql://user:pass@localhost/algalon?charset=utf8'
+
+    @classmethod
+    def init_app(cls, app):
+        Config.init_app(app)
+
+        # log to syslog
+        import logging
+        from logging.handlers import SysLogHandler
+        syslog_handler = SysLogHandler()
+        syslog_handler.setLevel(logging.WARNING)
+        app.logger.addHandler(syslog_handler)
+
+        # email errors to the administrators
+        import logging
+        from logging.handlers import SMTPHandler
+        credentials = None
+        secure = None
+        if getattr(cls, 'MAIL_USERNAME', None) is not None:
+            credentials = (cls.MAIL_USERNAME, cls.MAIL_PASSWORD)
+            if getattr(cls, 'MAIL_USE_TLS', None):
+                secure = ()
+        mail_handler = SMTPHandler(
+            mailhost=(cls.MAIL_SERVER, cls.MAIL_PORT),
+            fromaddr=cls.ALGALON_MAIL_SENDER,
+            toaddrs=[cls.ALGALON_ADMIN],
+            subject=cls.ALGALON_MAIL_SUBJECT_PREFIX + ' Application Error',
+            credentials=credentials,
+            secure=secure)
+        mail_handler.setLevel(logging.ERROR)
+        app.logger.addHandler(mail_handler)
+
+
+config = {
+    'development': DevelopmentConfig,
+    'testing': TestingConfig,
+    'production': ProductionConfig,
+    'default': ProductionConfig
+}
